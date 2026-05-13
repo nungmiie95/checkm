@@ -2,7 +2,6 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <!-- อัปเดต Meta Viewport: ป้องกันการซูมหน้าจอเองบนมือถือ (ให้ความรู้สึกเหมือนใช้แอปจริง) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ระบบเช็คชื่อนักเรียน</title>
     
@@ -56,6 +55,11 @@
             </div>
             
             <div class="p-8">
+                <!-- สถานะการเชื่อมต่อฐานข้อมูล -->
+                <div id="db-status" class="mb-4 text-center text-sm font-medium text-orange-500 bg-orange-50 py-2 rounded-lg border border-orange-100 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined animate-spin">sync</span> กำลังเชื่อมต่อฐานข้อมูล...
+                </div>
+
                 <form id="login-form" class="space-y-5">
                     <div id="login-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg text-center border border-red-100">
                         ผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง
@@ -65,8 +69,7 @@
                         <label class="text-sm font-medium text-gray-700">ผู้ใช้งาน (User)</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">person</span>
-                            <!-- ปรับขนาดฟอนต์เป็น 16px เพื่อกัน iPhone ซูมอัตโนมัติเวลาจิ้มช่องพิมพ์ -->
-                            <input type="text" id="username" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors" placeholder="ชื่อผู้ใช้งาน (ลองพิมพ์ admin)" required>
+                            <input type="text" id="username" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors" placeholder="ชื่อผู้ใช้งาน" required>
                         </div>
                     </div>
 
@@ -74,13 +77,12 @@
                         <label class="text-sm font-medium text-gray-700">รหัสผ่าน</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">lock</span>
-                            <!-- ปรับขนาดฟอนต์เป็น 16px -->
-                            <input type="password" id="password" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors" placeholder="พิมพ์อะไรก็ได้" required>
+                            <input type="password" id="password" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors" placeholder="รหัสผ่าน" required>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:bg-blue-700 active:scale-[0.98] transition-all mt-2">
-                        เข้าสู่ระบบ
+                    <button type="submit" id="btn-login" disabled class="w-full py-3.5 bg-gray-400 text-white rounded-xl font-semibold shadow-md transition-all mt-2 cursor-not-allowed">
+                        กำลังเตรียมระบบ...
                     </button>
                 </form>
             </div>
@@ -124,25 +126,15 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div class="flex flex-col gap-1">
                             <label class="text-xs font-medium text-gray-500">วันที่</label>
-                            <div class="flex items-center gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                                <span class="material-symbols-outlined text-gray-500 text-[18px]">calendar_month</span>
-                                <span class="text-sm">24 พ.ค. 2567</span>
-                            </div>
+                            <input type="date" id="attendance-date" class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 w-full">
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="text-xs font-medium text-gray-500">ช่วงเวลา</label>
-                            <select class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500">
-                                <option>เช้า (หน้าเสาธง)</option>
-                                <option>เย็น (หลังเลิกเรียน)</option>
+                            <select id="attendance-session" class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500">
+                                <option value="เช้า">เช้า (หน้าเสาธง)</option>
+                                <option value="เย็น">เย็น (หลังเลิกเรียน)</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">ชั้นเรียน</label>
-                        <select class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 w-full">
-                            <option>มัธยมศึกษาปีที่ 1/2</option>
-                            <option>มัธยมศึกษาปีที่ 1/3</option>
-                        </select>
                     </div>
                 </div>
 
@@ -174,9 +166,6 @@
             <!-- 2. Dashboard Screen (สรุปส่งไลน์) -->
             <section id="tab-dashboard" class="hidden">
                 <div class="flex justify-end gap-2 mb-2">
-                    <button class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm hover:bg-blue-700 active:scale-95 transition-all">
-                        <span class="material-symbols-outlined text-[18px]">photo_camera</span> บันทึกรูปภาพ
-                    </button>
                     <button class="flex items-center gap-2 bg-[#06C755] text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm hover:bg-[#05b34c] active:scale-95 transition-all">
                         <span class="material-symbols-outlined text-[18px]">share</span> ส่งเข้า LINE
                     </button>
@@ -184,11 +173,10 @@
 
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
                     <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white text-center relative overflow-hidden">
-                        <h2 class="text-xl font-bold mb-1 relative z-10">สรุปการเข้าแถว ม.1/2</h2>
-                        <p class="text-sm opacity-90 relative z-10">ประจำวันที่ 24 พฤษภาคม 2567 (เช้า)</p>
+                        <h2 class="text-xl font-bold mb-1 relative z-10">สรุปการเข้าแถว</h2>
+                        <p id="dash-date-text" class="text-sm opacity-90 relative z-10">ประจำวันที่ ...</p>
                     </div>
                     <div class="p-5 bg-slate-50">
-                        <!-- ปรับ Grid จาก 4 คอลัมน์ เป็น 2 คอลัมน์ (บนจอมือถือ) เพื่อไม่ให้เบียดกันเกินไป -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                             <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-center">
                                 <div class="text-[12px] text-gray-500 font-bold mb-1">ทั้งหมด</div>
@@ -213,9 +201,7 @@
                                 <span class="material-symbols-outlined text-[18px] text-orange-500">notifications</span>
                                 รายชื่อผู้ที่ ขาด / ลา / สาย
                             </h3>
-                            <ul id="dash-irregular-list" class="space-y-2.5">
-                                <!-- JS Will fill this -->
-                            </ul>
+                            <ul id="dash-irregular-list" class="space-y-2.5"></ul>
                         </div>
                         <div class="text-center mt-6 text-[10px] text-gray-400 font-medium flex items-center justify-center gap-1">
                             <span class="material-symbols-outlined text-[12px]">check_circle</span> สร้างโดย ระบบเช็คชื่อนักเรียนออนไลน์
@@ -231,8 +217,6 @@
                     <button class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500">รายเดือน</button>
                     <button class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500">รายภาค</button>
                 </div>
-                
-                <!-- Mockup Report Content -->
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center py-10">
                     <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">construction</span>
                     <p class="text-gray-500 font-medium">ส่วนนี้สำหรับเลือกดูรายงานย้อนหลัง</p>
@@ -244,24 +228,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex items-start gap-3">
                         <div class="p-2 bg-blue-100 text-blue-700 rounded-lg"><span class="material-symbols-outlined">school</span></div>
-                        <div><h3 class="font-semibold text-sm">จัดการนักเรียน</h3><p class="text-xs text-gray-500">เพิ่ม ลบ แก้ไข ข้อมูล</p></div>
+                        <div><h3 class="font-semibold text-sm">จัดการนักเรียน</h3><p class="text-xs text-gray-500">แก้ไขข้อมูลผ่าน Google Sheets</p></div>
                     </div>
                     <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex items-start gap-3">
                         <div class="p-2 bg-purple-100 text-purple-700 rounded-lg"><span class="material-symbols-outlined">badge</span></div>
-                        <div><h3 class="font-semibold text-sm">จัดการครู</h3><p class="text-xs text-gray-500">สิทธิ์การเข้าถึงห้อง</p></div>
-                    </div>
-                </div>
-                
-                <div>
-                    <h2 class="font-semibold text-gray-800 mb-3 px-1">ผู้ใช้งานระบบ</h2>
-                    <div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold">ส</div>
-                            <div>
-                                <h4 class="font-medium text-sm">ดร. สมชาย รักเรียน <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold">ADMIN</span></h4>
-                                <p class="text-xs text-gray-500">admin</p>
-                            </div>
-                        </div>
+                        <div><h3 class="font-semibold text-sm">จัดการครู</h3><p class="text-xs text-gray-500">จัดการข้อมูลผ่าน Google Sheets</p></div>
                     </div>
                 </div>
             </section>
@@ -293,27 +264,15 @@
 
     <!-- ======================= JAVASCRIPT LOGIC ======================= -->
     <script>
-        // --- Mock Data ---
-        let students = [
-            { id: 1, studentId: '10234', name: 'นายสมชาย รักเรียน', status: null },
-            { id: 2, studentId: '10235', name: 'นางสาวสมหญิง จริงใจ', status: 'present' },
-            { id: 3, studentId: '10236', name: 'นายมานะ อดทน', status: 'absent' },
-            { id: 4, studentId: '10237', name: 'นางสาวมณี วงศ์ศา', status: 'leave' },
-            { id: 5, studentId: '10238', name: 'เด็กชายปัญญา เก่งกล้า', status: 'late' },
-        ];
+        // ==========================================
+        // 🔴 เชื่อมต่อกับ Google Apps Script ของโรงเรียนนาดินดำ
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbytuwcUTTPCfouhho1a9Y4ynJhRkYWBuHUanAs4SrvYctNc_1f6BmN2-_RlFK8BlnJV/exec"; 
+        // ==========================================
 
-        const users = [
-            { username: 'admin', name: 'ดร. สมชาย รักเรียน', role: 'ADMIN', initial: 'ส', color: 'bg-blue-100 text-blue-700' },
-            { username: 'teacher1', name: 'น.ส. นภา สายลม', role: 'TEACHER', initial: 'น', color: 'bg-green-100 text-green-700' }
-        ];
-
+        let students = [];
+        let users = [];
         let currentUser = null;
 
-        // --- ตั้งค่า URL ของ Google Apps Script (สำคัญมาก!) ---
-        // เอาลิงก์ Web App ที่ได้จาก Google Apps Script มาวางในเครื่องหมายคำพูดด้านล่างนี้
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzM3B5yZWbZcgijg92bz0DUUjtIFWBmI5nnDWxbUoGwHxK2bmNbqwPvbxSzK2SP2lZ7/exec"; 
-        
-        // --- Config ---
         const statusConfig = {
             present: { label: 'มา', active: 'bg-green-600 text-white border-green-600', inactive: 'border-gray-200 text-gray-600 hover:bg-green-50' },
             absent: { label: 'ขาด', active: 'bg-red-600 text-white border-red-600', inactive: 'border-gray-200 text-gray-600 hover:bg-red-50' },
@@ -321,21 +280,48 @@
             late: { label: 'สาย', active: 'bg-orange-500 text-white border-orange-500', inactive: 'border-gray-200 text-gray-600 hover:bg-orange-50' }
         };
 
-        // --- Auth Logic ---
+        // 1. ดึงข้อมูลนักเรียนและครูจากฐานข้อมูล (Google Sheets) ทันทีที่เปิดเว็บ
+        window.onload = () => {
+            // เซ็ตวันที่ปัจจุบัน
+            document.getElementById('attendance-date').valueAsDate = new Date();
+
+            fetch(GAS_URL)
+                .then(res => res.json())
+                .then(data => {
+                    students = data.students;
+                    users = data.users;
+                    
+                    // เปลี่ยนปุ่ม Login ให้กดได้
+                    const loginBtn = document.getElementById('btn-login');
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                    loginBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    loginBtn.innerText = 'เข้าสู่ระบบ';
+                    
+                    document.getElementById('db-status').innerHTML = '<span class="material-symbols-outlined text-green-600">check_circle</span> <span class="text-green-600">พร้อมใช้งาน (เชื่อมต่อฐานข้อมูลแล้ว)</span>';
+                    document.getElementById('db-status').className = "mb-4 text-center text-sm font-medium text-green-700 bg-green-50 py-2 rounded-lg border border-green-100 flex items-center justify-center gap-2";
+                })
+                .catch(err => {
+                    console.error("Fetch Error: ", err);
+                    document.getElementById('db-status').innerHTML = '<span class="material-symbols-outlined text-red-500">error</span> <span class="text-red-500">ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้</span>';
+                });
+        };
+
+        // 2. ระบบเข้าสู่ระบบ
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const userInp = document.getElementById('username').value;
             const passInp = document.getElementById('password').value;
             
-            const user = users.find(u => u.username === userInp);
-            if(user && passInp !== '') {
-                // Success
+            // เช็คผู้ใช้งานจากฐานข้อมูล
+            const user = users.find(u => u.username === userInp && u.password.toString() === passInp.toString());
+            
+            if(user) {
                 currentUser = user;
                 document.getElementById('login-error').classList.add('hidden');
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 
-                // Update UI based on user
                 document.getElementById('user-avatar').className = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${user.color}`;
                 document.getElementById('user-avatar').innerText = user.initial;
                 document.getElementById('user-info').innerText = `เข้าสู่ระบบ: ${user.name} (${user.role})`;
@@ -351,7 +337,6 @@
                 switchTab('attendance');
                 renderStudents();
             } else {
-                // Error
                 document.getElementById('login-error').classList.remove('hidden');
             }
         });
@@ -360,29 +345,24 @@
             currentUser = null;
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
+            document.getElementById('password').value = ''; // เคลียร์รหัส
+            students.forEach(s => s.status = null); // เคลียร์สถานะเช็คชื่อ
         }
 
-        // --- Navigation Logic ---
+        // 3. การแสดงผลและการเช็คชื่อ
         function switchTab(tabId) {
-            // Hide all tabs
             ['attendance', 'dashboard', 'reports', 'admin'].forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
-                
-                // Reset Nav UI
                 const nav = document.getElementById(`nav-${id}`);
-                nav.className = `nav-btn flex flex-col items-center justify-center w-20 py-1 rounded-2xl transition-all duration-200 text-gray-500 hover:bg-gray-50 ${id==='admin' && currentUser.role!=='ADMIN' ? 'hidden' : ''}`;
+                nav.className = `nav-btn flex flex-col items-center justify-center w-20 py-1 rounded-2xl transition-all duration-200 text-gray-500 hover:bg-gray-50 ${id==='admin' && currentUser && currentUser.role!=='ADMIN' ? 'hidden' : ''}`;
                 nav.querySelector('.material-symbols-outlined').classList.remove('icon-fill');
             });
 
-            // Show selected tab
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             const activeNav = document.getElementById(`nav-${tabId}`);
             activeNav.className = `nav-btn flex flex-col items-center justify-center w-20 py-1 rounded-2xl transition-all duration-200 bg-blue-100 text-blue-800 scale-105`;
             activeNav.querySelector('.material-symbols-outlined').classList.add('icon-fill');
 
-            // Header Title mapping
             const titles = {
                 'attendance': 'ระบบเช็คชื่อนักเรียน',
                 'dashboard': 'แดชบอร์ดสรุป',
@@ -394,7 +374,6 @@
             if(tabId === 'dashboard') renderDashboard();
         }
 
-        // --- Attendance Logic ---
         function renderStudents() {
             const container = document.getElementById('students-container');
             document.getElementById('total-students').innerText = students.length;
@@ -408,11 +387,11 @@
             }
 
             let html = '';
-            students.forEach(student => {
+            students.forEach((student, index) => {
                 html += `
                 <div class="bg-white border border-gray-200 rounded-xl p-3.5 shadow-sm">
                     <div class="flex items-start gap-3 mb-3">
-                        <div class="w-10 h-10 flex-shrink-0 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold text-lg">${student.id}</div>
+                        <div class="w-10 h-10 flex-shrink-0 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold text-lg">${index + 1}</div>
                         <div class="flex-grow">
                             <h3 class="font-medium text-gray-900">${student.name}</h3>
                             <p class="text-xs text-gray-500 mt-0.5">รหัส: ${student.studentId}</p>
@@ -421,8 +400,7 @@
                     <div class="grid grid-cols-4 gap-2">
                         ${Object.keys(statusConfig).map(key => {
                             const conf = statusConfig[key];
-                            const isActive = student.status === key;
-                            const cls = isActive ? conf.active : conf.inactive;
+                            const cls = student.status === key ? conf.active : conf.inactive;
                             return `<button onclick="setStatus(${student.id}, '${key}')" class="h-10 rounded-lg border text-sm font-semibold transition-all duration-200 ${cls}">${conf.label}</button>`;
                         }).join('')}
                     </div>
@@ -444,92 +422,66 @@
             renderStudents();
         }
 
-        // --- Save to Google Sheets Logic ---
+        // 4. บันทึกข้อมูลกลับไปที่ Google Sheets
         function saveAttendance() {
-            // เช็คว่าใส่ลิงก์หรือยัง
-            if(GAS_URL === "https://script.google.com/macros/s/AKfycbzM3B5yZWbZcgijg92bz0DUUjtIFWBmI5nnDWxbUoGwHxK2bmNbqwPvbxSzK2SP2lZ7/exec" || GAS_URL === "") {
-                Swal.fire({
-                    title: 'ยังไม่ได้ตั้งค่าฐานข้อมูล', 
-                    text: 'กรุณานำ URL จาก Google Apps Script มาใส่ในตัวแปร GAS_URL ก่อนครับ', 
-                    icon: 'warning',
-                    confirmButtonText: 'เข้าใจแล้ว',
-                    confirmButtonColor: '#2563eb'
-                });
-                return;
-            }
-
-            // เช็คว่ามีคนยังไม่ได้เช็คชื่อไหม
             const unChecked = students.filter(s => s.status === null).length;
             if(unChecked > 0) {
-                Swal.fire({
-                    title: 'เช็คชื่อยังไม่ครบ!', 
-                    text: `มีนักเรียนที่ยังไม่ได้เช็คชื่ออีก ${unChecked} คน กรุณาเช็คให้ครบก่อนบันทึกครับ`, 
-                    icon: 'warning',
-                    confirmButtonText: 'ตกลง',
-                    confirmButtonColor: '#2563eb'
-                });
+                Swal.fire({ title: 'เช็คชื่อยังไม่ครบ!', text: `เหลืออีก ${unChecked} คนครับ`, icon: 'warning', confirmButtonColor: '#2563eb' });
                 return;
             }
 
             const btn = document.getElementById('btn-save');
             btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">sync</span> กำลังบันทึก...';
             btn.disabled = true;
-            btn.classList.add('opacity-75');
 
-            // ข้อมูลที่จะส่งไป Google Sheets
+            const dateVal = document.getElementById('attendance-date').value;
+            const sessionVal = document.getElementById('attendance-session').options[document.getElementById('attendance-session').selectedIndex].text;
+
             const payload = {
-                date: "24 พ.ค. 2567", // ดึงจากหน้าจอจริง
-                session: "เช้า (หน้าเสาธง)", // ดึงจากหน้าจอจริง
+                date: dateVal,
+                session: sessionVal,
                 teacher: currentUser.name,
                 records: students.map(s => ({
                     studentId: s.studentId,
                     name: s.name,
-                    status: statusConfig[s.status]?.label || 'ไม่ระบุ'
+                    status: statusConfig[s.status]?.label || '-'
                 }))
             };
 
-            // ส่งข้อมูลไปยัง Google Apps Script
             fetch(GAS_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload)
             })
-            .then(response => response.text())
+            .then(res => res.json())
             .then(data => {
-                Swal.fire({
-                    title: 'บันทึกสำเร็จ!',
-                    text: 'ข้อมูลถูกส่งไปยังฐานข้อมูลเรียบร้อยแล้ว',
-                    icon: 'success',
-                    confirmButtonColor: '#2563eb',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-                
-                // คืนค่าปุ่ม
-                btn.innerHTML = 'บันทึกการเช็กชื่อ';
-                btn.disabled = false;
-                btn.classList.remove('opacity-75');
-                
-                // เปลี่ยนหน้าไปโชว์สรุปส่งไลน์
-                setTimeout(() => {
-                    switchTab('dashboard');
-                }, 1500);
+                if (data.result === 'success') {
+                    Swal.fire({ title: 'บันทึกสำเร็จ!', icon: 'success', timer: 1500, showConfirmButton: false });
+                    btn.innerHTML = 'บันทึกการเช็กชื่อ';
+                    btn.disabled = false;
+                    setTimeout(() => switchTab('dashboard'), 1500);
+                } else {
+                    throw new Error("Server returned error status");
+                }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: 'เกิดข้อผิดพลาด', 
-                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 
-                    icon: 'error',
-                    confirmButtonColor: '#d33'
-                });
+            .catch(err => {
+                console.error("Save Error:", err);
+                Swal.fire({ title: 'เกิดข้อผิดพลาด', text: 'บันทึกไม่ได้ กรุณาลองใหม่อีกครั้ง', icon: 'error', confirmButtonColor: '#d33' });
                 btn.innerHTML = 'บันทึกการเช็กชื่อ';
                 btn.disabled = false;
-                btn.classList.remove('opacity-75');
             });
         }
 
-        // --- Dashboard Logic ---
+        // 5. สรุปผลหน้าแดชบอร์ด
         function renderDashboard() {
+            const rawDate = document.getElementById('attendance-date').value;
+            // Format วันที่ให้สวยงาม (ถ้าดึงค่าจาก input type="date" ได้)
+            const dateObj = new Date(rawDate);
+            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            const displayDate = isNaN(dateObj) ? rawDate : `${dateObj.getDate()} ${thaiMonths[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+            
+            const sessionVal = document.getElementById('attendance-session').options[document.getElementById('attendance-session').selectedIndex].text;
+            document.getElementById('dash-date-text').innerText = `ประจำวันที่ ${displayDate} (${sessionVal})`;
+
             const present = students.filter(s => s.status === 'present').length;
             const absent = students.filter(s => s.status === 'absent').length;
             const leave = students.filter(s => s.status === 'leave').length;
@@ -548,11 +500,11 @@
                 const colors = { absent: 'text-red-700 bg-red-100', leave: 'text-yellow-700 bg-yellow-100', late: 'text-orange-700 bg-orange-100' };
                 const labels = { absent: 'ขาด', leave: 'ลา', late: 'สาย' };
                 
-                irregulars.forEach(s => {
+                irregulars.forEach((s, index) => {
                     html += `
                     <li class="flex justify-between items-center text-sm">
                         <div class="flex items-center gap-2">
-                            <span class="w-5 text-gray-400 text-xs">${s.id}.</span>
+                            <span class="w-5 text-gray-400 text-xs">${index + 1}.</span>
                             <span class="text-gray-700 font-medium">${s.name}</span>
                         </div>
                         <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold ${colors[s.status]}">${labels[s.status]}</span>
